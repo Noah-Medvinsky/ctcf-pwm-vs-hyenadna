@@ -1,0 +1,7 @@
+# Colab GPU environment: HyenaDNA embedding extraction and the embedding CNN.
+# Colab already provides torch, numpy, h5py and scikit-learn; install the rest with
+#   !pip install -r requirements-colab.txt
+# Model: LongSafari/hyenadna-tiny-1k-seqlen-d256 (the checkpoint Tang et al. used).
+# Exact pins get filled in during week 5 once the extraction notebook runs.
+transformers
+huggingface_hub
