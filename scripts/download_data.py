@@ -1,7 +1,8 @@
-"""Download the inputs for the CTCF experiment.
+"""Download the inputs for the experiment.
 
-1. The CTCF ChIP-seq dataset from Tang et al. (2025), Zenodo record 8279715
-   (files hosted under record 13836032). Only data/chip/CTCF_200.h5 is kept.
+1. The ChIP-seq datasets from Tang et al. (2025), Zenodo record 8279715 (files
+   hosted under record 13836032). Only the 10 GM12878 transcription-factor files
+   in data/chip/ (CTCF plus 9 others, about 80 MB) are kept.
 2. The JASPAR CTCF motifs MA0139.1 and MA0139.2.
 
 Usage:
@@ -23,7 +24,7 @@ RAW = ROOT / "data" / "raw"
 ZENODO_URL = "https://zenodo.org/api/records/13836032/files/data.tar.gz/content"
 ZENODO_MD5 = "d638cc27d988f2fbdb94851262e22ccd"
 ZENODO_SIZE = 486_392_602
-CTCF_MEMBER = "./data/chip/CTCF_200.h5"
+CHIP_TFS = ["ATF2", "Arid3", "BACH1", "CTCF", "ELK1", "GABPA", "MAX", "REST", "SRF", "ZNF24"]
 
 JASPAR_URL = "https://jaspar.elixir.no/api/v1/matrix/{}.jaspar"
 JASPAR_IDS = ["MA0139.1", "MA0139.2"]
@@ -70,10 +71,10 @@ def download(url, dest, size=None, retries=20):
     raise RuntimeError(f"download incomplete after {retries} retries: {done} of {size} bytes")
 
 
-def get_ctcf(keep_archive):
-    target = RAW / "CTCF_200.h5"
-    if target.exists():
-        print(f"{target.name} already present, skipping")
+def get_chip(keep_archive):
+    missing = [tf for tf in CHIP_TFS if not (RAW / f"{tf}_200.h5").exists()]
+    if not missing:
+        print("All ChIP-seq files already present, skipping")
         return
     archive = RAW / "tang2025_data.tar.gz"
     if not archive.exists() or archive.stat().st_size != ZENODO_SIZE:
@@ -83,14 +84,14 @@ def get_ctcf(keep_archive):
     digest = md5sum(archive)
     if digest != ZENODO_MD5:
         raise RuntimeError(f"MD5 mismatch: got {digest}, expected {ZENODO_MD5}")
-    print("Extracting CTCF_200.h5...")
     with tarfile.open(archive, "r:gz") as tar:
-        member = tar.getmember(CTCF_MEMBER)
-        with tar.extractfile(member) as src, open(target, "wb") as dst:
-            shutil.copyfileobj(src, dst)
+        for tf in missing:
+            target = RAW / f"{tf}_200.h5"
+            with tar.extractfile(tar.getmember(f"./data/chip/{tf}_200.h5")) as src, open(target, "wb") as dst:
+                shutil.copyfileobj(src, dst)
+            print(f"Saved {target}")
     if not keep_archive:
         archive.unlink()
-    print(f"Saved {target}")
 
 
 def get_jaspar():
@@ -117,7 +118,7 @@ def main():
         raise SystemExit(f"Another download is already running (delete {lock} if it is not).")
     try:
         get_jaspar()
-        get_ctcf(args.keep_archive)
+        get_chip(args.keep_archive)
     finally:
         lock.unlink()
 

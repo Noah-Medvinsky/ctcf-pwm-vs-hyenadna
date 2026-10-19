@@ -23,6 +23,12 @@ Each example is a 200-nt sequence from GM12878 cells. Positives are CTCF ChIP-se
 are DNase I hypersensitive sites that don't overlap any ChIP-seq peak, down-sampled to a 1:1 balance.
 The split is the authors' random 70/10/20 split, stored in the file.
 
+The same archive has 9 more GM12878 transcription factors in the same format: ATF2, Arid3, BACH1,
+ELK1, GABPA, MAX, REST, SRF and ZNF24. `download_data.py` keeps all 10. Five of their author-provided
+splits contain a few exact duplicate sequences across splits: all positives, and at most 0.51% of a
+test set (GABPA). CTCF has none. The splits are kept as published so results stay comparable to the
+paper.
+
 ## Setup (local)
 
 Requires Python 3.10+. From the repository root:
