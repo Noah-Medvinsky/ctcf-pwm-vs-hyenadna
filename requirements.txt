@@ -11,3 +11,7 @@ matplotlib==3.11.2
 jupyter==1.1.1
 ipykernel==7.4.0
 pytest==9.1.1
+# Tang et al. used TensorFlow 2.12 / Keras 2.12 on Python 3.9, which does not install on
+# Python 3.12. tf-keras keeps the Keras 2 API and behavior on current TensorFlow.
+tensorflow==2.21.0
+tf-keras==2.21.0

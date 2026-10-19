@@ -46,6 +46,28 @@ if it stops.
 
 HyenaDNA embedding extraction runs on a Colab GPU. See `requirements-colab.txt`.
 
+## Reproducing the paper's CNN
+
+```bash
+python scripts/train_cnn.py --input onehot --seeds 0 1 2 3 4
+```
+
+This trains the authors' baseline CNN five times and writes per-sequence test predictions to
+`results/predictions/` and one summary row per run to `results/tables/`. The published CTCF values,
+read off Fig. 3, are in `results/tables/published_ctcf_auroc.csv`.
+
+Differences from the original setup, all of which leave the method unchanged:
+
+- **Software versions:** TensorFlow 2.21 with `tf-keras` (the Keras 2 API) instead of TensorFlow 2.12 on
+  Python 3.9, which doesn't install on Python 3.12.
+- **One-hot input orientation:** the h5 file stores sequences as (N, 4, 200). Keras `Conv1D` needs
+  (N, 200, 4), so they're transposed. Without this, the original network can't run.
+- **Dead branch removed:** the original `chip_cnn` builds a BatchNorm + 1×1 conv branch whose output is
+  never used. It's omitted; `tests/test_models.py` checks that the network matches the original exactly.
+- **Fixed random seeds:** seeds 0–4 are set for reproducibility. The authors didn't set seeds.
+- **Exact AUROC:** AUROC is reported both from the Keras metric the authors used (a 200-threshold
+  approximation) and from scikit-learn's exact computation.
+
 ## Layout
 
 ```

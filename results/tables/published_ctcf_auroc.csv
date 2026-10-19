@@ -1,0 +1,10 @@
+# CTCF test AUROC reported by Tang et al. (2025), Genome Biology, Fig. 3 (mean of 5 random initializations).
+# Values are not stated in the text; they were digitized from the figure image by locating the CTCF marker
+# and calibrating against the axis ticks (1 px ~ 0.00075 AUROC; estimated accuracy +/- 0.002).
+model,input,classifier,auroc_estimate
+one-hot CNN,one-hot sequence,baseline CNN,0.988
+HyenaDNA,hyenadna-tiny-1k-seqlen-d256 full embedding,baseline CNN,0.981
+GPN,custom GPN full embedding,baseline CNN,0.988
+Nucleotide Transformer,NT 2.5B-1000G full embedding,baseline CNN,0.964
+DNABERT2,DNABERT-2-117M full embedding,baseline CNN,0.952
+Sei,Sei supervised embedding,baseline CNN,0.993
