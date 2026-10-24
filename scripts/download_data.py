@@ -3,7 +3,7 @@
 1. The ChIP-seq datasets from Tang et al. (2025), Zenodo record 8279715 (files
    hosted under record 13836032). Only the 10 GM12878 transcription-factor files
    in data/chip/ (CTCF plus 9 others, about 80 MB) are kept.
-2. The JASPAR CTCF motifs MA0139.1 and MA0139.2.
+2. The JASPAR motif for each of the 10 TFs (see JASPAR_IDS).
 
 Usage:
     python scripts/download_data.py            # download everything missing
@@ -27,7 +27,10 @@ ZENODO_SIZE = 486_392_602
 CHIP_TFS = ["ATF2", "Arid3", "BACH1", "CTCF", "ELK1", "GABPA", "MAX", "REST", "SRF", "ZNF24"]
 
 JASPAR_URL = "https://jaspar.elixir.no/api/v1/matrix/{}.jaspar"
-JASPAR_IDS = ["MA0139.1", "MA0139.2"]
+# Latest human JASPAR CORE motif per TF; Arid3 has no human matrix, so the mouse Arid3a one is used.
+# MA0139.1 is the older, longer (19 bp) CTCF matrix, kept for comparison.
+JASPAR_IDS = ["MA0139.1", "MA0139.2", "MA1632.2", "MA0151.1", "MA1633.2", "MA0028.3",
+              "MA0062.4", "MA0058.4", "MA0138.3", "MA0083.3", "MA1124.1"]
 
 
 def md5sum(path, chunk=1 << 20):
