@@ -8,7 +8,8 @@ from ctcf.models import chip_cnn
 
 
 def original_chip_cnn(input_shape, output_shape, model_name):
-    """Verbatim copy of chip_cnn from LLM_eval chip-clip-seq/representation_perf.py."""
+    """Verbatim copy of chip_cnn from LLM_eval chip-clip-seq/representation_perf.py
+    (MIT License, Copyright (c) 2024 amberT15; see THIRD_PARTY_NOTICES.md)."""
     initializer = keras.initializers.HeUniform()
     input = keras.Input(shape=input_shape)
     if model_name != 'GPN' and model_name != 'CNN':

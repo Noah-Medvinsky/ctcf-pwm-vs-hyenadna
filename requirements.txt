@@ -1,5 +1,6 @@
-# Local environment: data preparation, PWM baseline, evaluation, figures.
-# HyenaDNA embedding extraction runs on Colab; see requirements-colab.txt.
+# Everything runs locally on CPU, including HyenaDNA-tiny embedding extraction.
+# Install PyTorch from its CPU index first:
+#   pip install torch==2.14.1 torchvision==0.29.1 --index-url https://download.pytorch.org/whl/cpu
 # Pinned versions tested with Python 3.12.10 on Windows 11.
 numpy==2.5.4
 pandas==3.0.6
@@ -15,3 +16,8 @@ pytest==9.1.1
 # Python 3.12. tf-keras keeps the Keras 2 API and behavior on current TensorFlow.
 tensorflow==2.21.0
 tf-keras==2.21.0
+# HyenaDNA (src/ctcf/hyenadna_standalone.py and src/ctcf/hyena.py)
+einops==0.8.2
+transformers==5.20.2
+huggingface_hub==2.3.0
+omegaconf==2.4.0

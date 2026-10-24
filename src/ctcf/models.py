@@ -1,8 +1,8 @@
 """Baseline CNN from Tang et al. (2025), Task 2 (ChIP-seq).
 
 Copied from `chip_cnn` in amberT15/LLM_eval, chip-clip-seq/representation_perf.py
-(MIT License). Uses tf_keras so the Keras 2 behavior of their TensorFlow 2.12
-setup is kept.
+(MIT License, Copyright (c) 2024 amberT15; see THIRD_PARTY_NOTICES.md). Uses tf_keras
+so the Keras 2 behavior of their TensorFlow 2.12 setup is kept.
 
 Reproduction note: the original builds an optional BatchNorm + 1x1 Conv1D
 (512 filters) for embedding inputs, but its first conv layer is applied to

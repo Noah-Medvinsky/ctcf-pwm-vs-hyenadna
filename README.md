@@ -44,13 +44,29 @@ pytest
 ```
 
 `download_data.py` downloads the authors' 486 MB data archive and checks its MD5 checksum. It keeps
-only `data/raw/CTCF_200.h5` and also saves the JASPAR motifs `MA0139.1` and `MA0139.2` into
-`data/raw/`. Zenodo often drops long downloads; the script resumes them automatically, so rerun it
-if it stops.
+the 10 ChIP-seq files (`data/raw/{TF}_200.h5`) and saves each TF's JASPAR motif into `data/raw/`.
+Zenodo often drops long downloads; the script resumes them automatically, so rerun it if it stops.
 
-## Setup (Colab)
+## PWM baseline
 
-HyenaDNA embedding extraction runs on a Colab GPU. See `requirements-colab.txt`.
+```bash
+python scripts/score_pwm.py
+```
+
+This scores every TF's test set with its JASPAR motif in a few seconds. It writes per-sequence
+results to `results/predictions/{TF}_pwm.csv` and a summary to `results/tables/pwm_summary.csv`.
+
+## HyenaDNA embeddings
+
+```bash
+python scripts/embed_hyena.py --tf CTCF
+python scripts/train_cnn.py --tf CTCF --input hyena --h5 data/processed/CTCF_hyena.h5
+```
+
+HyenaDNA-tiny (`LongSafari/hyenadna-tiny-1k-seqlen-d256`, 1.6 million parameters) runs on a laptop
+CPU at about 20 seconds per 1,000 sequences. The weights download automatically on first use. Full
+CTCF embeddings take about 9 GB in `data/processed/`. The CNN reads them from disk in chunks, so
+they don't need to fit in RAM.
 
 ## Reproducing the paper's CNN
 

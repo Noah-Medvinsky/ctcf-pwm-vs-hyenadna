@@ -15,3 +15,4 @@ data/processed/*
 *.part
 *.tar.gz
 download.lock
+data/models/

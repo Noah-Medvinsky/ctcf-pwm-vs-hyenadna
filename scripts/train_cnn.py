@@ -32,33 +32,51 @@ from ctcf.models import chip_cnn
 BATCH_SIZE = 256
 
 
-def load_inputs(args):
-    """Return {split: (x, y)} with x shaped (N, length, channels)."""
-    data = {}
-    for split in SPLITS:
+class Split:
+    """One data split: labels in memory, inputs either in memory (one-hot) or streamed
+    from the embedding file in chunks (HyenaDNA embeddings are too large for RAM)."""
+
+    def __init__(self, args, split):
         if args.input == "onehot":
             x, y = load_onehot(split, ROOT / "data" / "raw" / f"{args.tf}_200.h5")
-            x = np.transpose(x, (0, 2, 1))  # (N, 4, 200) -> (N, 200, 4) for Conv1D
+            self.x = np.transpose(x, (0, 2, 1)).astype("float32")  # (N, 4, 200) -> (N, 200, 4) for Conv1D
+            self.h5 = None
         else:
+            self.x, self.h5, self.key = None, args.h5, f"x_{split}"
             with h5py.File(args.h5, "r") as f:
-                x = f[f"x_{split}"][()]
                 y = f[f"y_{split}"][()].ravel().astype(int)
-        if args.subset:
-            x, y = x[:args.subset], y[:args.subset]
-        data[split] = (x.astype("float32"), y)
-    return data
+                self.shape = f[self.key].shape[1:]
+        self.y = y[:args.subset] if args.subset else y
+        if self.x is not None:
+            self.x = self.x[:len(self.y)]
+            self.shape = self.x.shape[1:]
+
+    def dataset(self, shuffle):
+        if self.x is not None:
+            ds = tf.data.Dataset.from_tensor_slices((self.x, self.y))
+        else:
+            n, h5, key, labels = len(self.y), self.h5, self.key, self.y
+
+            def chunks():
+                with h5py.File(h5, "r") as f:
+                    for i in range(0, n, 1024):
+                        stop = min(i + 1024, n)
+                        yield f[key][i:stop].astype("float32"), labels[i:stop]
+
+            ds = tf.data.Dataset.from_generator(chunks, output_signature=(
+                tf.TensorSpec((None, *self.shape), tf.float32), tf.TensorSpec((None,), tf.int64))).unbatch()
+        if shuffle:  # same buffer as the authors: shuffle(256 * 4)
+            ds = ds.shuffle(BATCH_SIZE * 4)
+        return ds.batch(BATCH_SIZE).prefetch(2)
 
 
-def make_dataset(x, y, shuffle):
-    ds = tf.data.Dataset.from_tensor_slices((x, y))
-    if shuffle:
-        ds = ds.shuffle(BATCH_SIZE * 4)
-    return ds.batch(BATCH_SIZE)
+def load_inputs(args):
+    return {split: Split(args, split) for split in SPLITS}
 
 
 def train_one(data, seed, epochs):
     keras.utils.set_random_seed(seed)
-    model = chip_cnn(data["train"][0].shape[1:], 1)
+    model = chip_cnn(data["train"].shape, 1)
     model.compile(
         loss=keras.losses.BinaryCrossentropy(from_logits=False),
         optimizer=keras.optimizers.Adam(learning_rate=0.001),
@@ -70,8 +88,8 @@ def train_one(data, seed, epochs):
         keras.callbacks.ReduceLROnPlateau(monitor="val_loss", factor=0.2, patience=5, min_lr=1e-6),
     ]
     history = model.fit(
-        make_dataset(*data["train"], shuffle=True),
-        validation_data=make_dataset(*data["valid"], shuffle=False),
+        data["train"].dataset(shuffle=True),
+        validation_data=data["valid"].dataset(shuffle=False),
         epochs=epochs, verbose=2, callbacks=callbacks,
     )
     return model, len(history.history["loss"])
@@ -97,13 +115,13 @@ def main():
     summary_path = args.out / "tables" / f"{name}_runs.csv"
     summary_path.parent.mkdir(parents=True, exist_ok=True)
 
-    x_test, y_test = data["test"]
+    y_test = data["test"].y
     for seed in args.seeds:
         print(f"##### {name} seed {seed} #####")
         start = time.time()
         model, n_epochs = train_one(data, seed, args.epochs)
-        _, acc, keras_auroc, keras_aupr = model.evaluate(make_dataset(x_test, y_test, shuffle=False), verbose=0)
-        prob = model.predict(x_test, batch_size=BATCH_SIZE, verbose=0).ravel()
+        _, acc, keras_auroc, keras_aupr = model.evaluate(data["test"].dataset(shuffle=False), verbose=0)
+        prob = model.predict(data["test"].dataset(shuffle=False), verbose=0).ravel()
         pd.DataFrame({"index": np.arange(len(y_test)), "label": y_test, "prob": prob}).to_csv(
             pred_dir / f"{name}_seed{seed}.csv", index=False)
         row = {
